@@ -11,9 +11,15 @@
 #define ValvePin3  12 // D6
 #define ValvePin4  13 // D7
 
-#define VALVES 4      // between 1 and 4. How many valves on your pcb are controllable
+// === BEGIN CONFIG ===
+#define VALVES      4      // between 1 and 4. How many valves on your pcb are controllable
 
-char mqtt_server[16]     = "192.168.2.84";
+#define configSSID  "UHC"  // captive portal wifi name
+#define configPW    ""     // captive portal wifi pw
+// === END CONFIG ===
+
+// webinterface defaults
+char mqtt_server[16]     = "192.168.1.1";
 char mqtt_port[6]        = "1883";
 char mqtt_user[20]       = "";
 char mqtt_pass[20]       = "";
@@ -38,21 +44,18 @@ char Valve4Status[45]    = "";
 void callback(char* topic, byte* payload, unsigned int length);
 
 bool shouldSaveConfig = false;
-int connectionFails = 0;
-
-#define configSSID  "UHC"
-#define configPW    ""
+int connectionFails   = 0;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-void saveConfigCallback ()
+void saveConfigCallback()
 {
   Serial.println("Should save config");
   shouldSaveConfig = true;
 }
 
-void setup()
+void initPorts()
 {
   pinMode(ValvePin1, OUTPUT);
   digitalWrite(ValvePin1, LOW);
@@ -68,6 +71,11 @@ void setup()
   pinMode(ValvePin4, OUTPUT);
   digitalWrite(ValvePin4, LOW);
   #endif
+}
+
+void setup()
+{
+  initPorts();
 
   Serial.begin(500000);
   Serial.println("Mounting FS...");
@@ -235,7 +243,7 @@ void setup()
   }
 
   Serial.println();
-  Serial.print("Local IP adress: ");
+  Serial.print("Local IP: ");
   Serial.println(WiFi.localIP());
 
   //Connect to MQTT broker and set callback
@@ -358,7 +366,7 @@ void connect()
   {
     Serial.begin(500000);
     Serial.print("Attempting MQTT connection...");
-    if (client.connect(configSSID, mqtt_user, mqtt_pass, "uhc/will", 0, false, "OFFLINE"))
+    if (client.connect(configSSID, mqtt_user, mqtt_pass))
     {
       Serial.println("connected!");
 
